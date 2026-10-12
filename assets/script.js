@@ -1,146 +1,103 @@
 (function () {
-  // Theme toggle
-  var root = document.documentElement;
-  var toggle = document.getElementById("themeToggle");
-  var iconSun = document.getElementById("iconSun");
-  var iconMoon = document.getElementById("iconMoon");
-
-  function systemPrefersDark() {
-    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  }
-
-  function applyIcon(theme) {
-    var isDark = theme === "dark" || (theme === null && systemPrefersDark());
-    iconSun.style.display = isDark ? "none" : "block";
-    iconMoon.style.display = isDark ? "block" : "none";
-  }
-
-  var stored = localStorage.getItem("theme");
-  if (stored) root.setAttribute("data-theme", stored);
-  applyIcon(stored);
-
-  toggle.addEventListener("click", function () {
-    var current = root.getAttribute("data-theme") || (systemPrefersDark() ? "dark" : "light");
-    var next = current === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", next);
-    localStorage.setItem("theme", next);
-    applyIcon(next);
-  });
+  // Footer year
+  var yearEl = document.getElementById("year");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
 
   // Mobile nav toggle
   var navToggle = document.getElementById("navToggle");
-  var navLinks = document.querySelector(".nav-links");
-  navToggle.addEventListener("click", function () {
-    var isOpen = navLinks.style.display === "flex";
-    navLinks.style.display = isOpen ? "none" : "flex";
-    navLinks.style.flexDirection = "column";
-    navLinks.style.position = "absolute";
-    navLinks.style.top = "56px";
-    navLinks.style.right = "24px";
-    navLinks.style.background = "var(--surface)";
-    navLinks.style.border = "1px solid var(--border)";
-    navLinks.style.borderRadius = "12px";
-    navLinks.style.padding = "14px 20px";
-    navLinks.style.gap = "14px";
-    navLinks.style.boxShadow = "var(--shadow-md)";
-  });
-  navLinks.querySelectorAll("a").forEach(function (a) {
-    a.addEventListener("click", function () {
-      if (window.innerWidth <= 640) navLinks.style.display = "none";
+  var navLinks = document.getElementById("navLinks");
+  if (navToggle && navLinks) {
+    navToggle.addEventListener("click", function () {
+      navLinks.classList.toggle("open");
     });
-  });
-
-  // Scroll reveal
-  //
-  // This used to be an IntersectionObserver, which left content permanently
-  // invisible. The observer only fires for elements that are on screen during
-  // a rendered frame, so anything the viewport skips past never reveals:
-  // following an anchor link to #projects, a restored scroll position on
-  // back-navigation, or simply flicking down fast. Measured on this page it
-  // stranded 16 of 31 elements at opacity 0, five of them sitting on screen.
-  //
-  // A position sweep has no such gap: on every frame where the page has
-  // scrolled, anything whose top has passed the bottom of the viewport is
-  // revealed, regardless of how it got there.
-  var revealEls = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
-  var lastSweep = 0;
-
-  function sweep() {
-    lastSweep = Date.now();
-    var limit = window.innerHeight - 60; // reveal slightly before the edge
-    for (var i = revealEls.length - 1; i >= 0; i--) {
-      var el = revealEls[i];
-      if (el.getBoundingClientRect().top < limit) {
-        el.classList.add("in");
-        revealEls.splice(i, 1); // revealed once, never re-checked
-      }
-    }
+    navLinks.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", function () { navLinks.classList.remove("open"); });
+    });
   }
 
-  // Throttled with a timestamp rather than requestAnimationFrame: rAF is
-  // suspended in background tabs, so a page opened in a new tab and read
-  // later could sit with its content still hidden. The sweep is a handful of
-  // getBoundingClientRect calls on a list that only shrinks, so running it
-  // straight from the scroll handler costs nothing.
-  function queueSweep() {
-    if (revealEls.length === 0) return;
-    if (Date.now() - lastSweep < 80) return;
-    sweep();
+  // Per-character reveal for the hero name
+  function buildChars(elId, text, delayStep) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    var html = "";
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i] === " " ? "&nbsp;" : text[i];
+      html += '<span class="char-mask"><span class="char-unit" style="animation-delay:' + (i * delayStep) + 'ms">' + ch + "</span></span>";
+    }
+    el.innerHTML = html;
+  }
+  buildChars("line1", "Salah", 30);
+  buildChars("line2", "Asfan", 30);
+
+  // Word-by-word reveal for the lede
+  function buildWords(elId, text, delayStep, accentWords) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    var words = text.split(" ");
+    var html = "";
+    words.forEach(function (w, i) {
+      var cls = accentWords.indexOf(w.replace(/[.,]/g, "")) !== -1 ? "word-mask accent-word" : "word-mask";
+      html += '<span class="' + cls + '"><span class="word-unit" style="animation-delay:' + (i * delayStep) + 'ms">' + w + "</span></span> ";
+    });
+    el.innerHTML = html;
+  }
+  buildWords("lede", "I build local-first AI that never phones home.", 55, ["local-first", "AI"]);
+
+  // Skills marquee
+  var marqueeItems = ["Next.js", "TypeScript", "Python", "Ollama", "Azure", "Power BI", ".NET", "React"];
+  var m = document.getElementById("marquee");
+  if (m) {
+    var row = marqueeItems.map(function (t) { return "<span>" + t + "</span>"; }).join("");
+    m.innerHTML = row + row;
   }
 
-  sweep();
-  window.addEventListener("scroll", queueSweep, { passive: true });
-  window.addEventListener("resize", queueSweep);
-  window.addEventListener("load", sweep);
-  // Safari restores scroll position on back-navigation without firing scroll.
-  window.addEventListener("pageshow", sweep);
-  // Catch up on anything missed while the tab was in the background.
-  document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) sweep();
-  });
+  // Trailing cursor glow
+  var glow = document.getElementById("cursorGlow");
+  if (glow && window.matchMedia("(pointer: fine)").matches) {
+    var gx = 0, gy = 0, tx = 0, ty = 0, shown = false;
+    window.addEventListener("mousemove", function (e) {
+      tx = e.clientX; ty = e.clientY;
+      if (!shown) { shown = true; glow.style.opacity = "1"; gx = tx; gy = ty; }
+    });
+    (function loop() {
+      gx += (tx - gx) * 0.16;
+      gy += (ty - gy) * 0.16;
+      glow.style.transform = "translate(" + gx + "px," + gy + "px)";
+      requestAnimationFrame(loop);
+    })();
+  }
 
-  // Footer year
-  document.getElementById("year").textContent = new Date().getFullYear();
+  // Hover preview image, follows cursor, swaps per work row
+  var preview = document.getElementById("hoverPreview");
+  var previewImg = document.getElementById("hoverImg");
+  if (preview && previewImg && window.matchMedia("(pointer: fine)").matches) {
+    var px = 0, py = 0, ptx = 0, pty = 0;
+    document.querySelectorAll(".work-row[data-img]").forEach(function (row) {
+      row.addEventListener("mouseenter", function () {
+        previewImg.src = row.getAttribute("data-img");
+        preview.classList.add("show");
+      });
+      row.addEventListener("mouseleave", function () {
+        preview.classList.remove("show");
+      });
+    });
+    window.addEventListener("mousemove", function (e) {
+      ptx = e.clientX; pty = e.clientY;
+    });
+    (function ploop() {
+      px += (ptx - px) * 0.2;
+      py += (pty - py) * 0.2;
+      preview.style.left = px + "px";
+      preview.style.top = py + "px";
+      requestAnimationFrame(ploop);
+    })();
+  }
 
-  // Count up hero stats
-  //
-  // The animation only ever runs when the page is actually being looked at.
-  // It used to start unconditionally on requestAnimationFrame, which is
-  // suspended in a background tab — so opening the site in a new tab and
-  // switching to it later left the headline stats reading "0+ projects
-  // shipped" and "0 degrees" permanently. The real number is the point; the
-  // animation is decoration, so it is the part that gets skipped.
-  var counters = Array.prototype.slice.call(
-    document.querySelectorAll(".hero-meta-item strong")
-  );
-  var reduceMotion =
-    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  counters.forEach(function (el) {
-    var match = el.textContent.trim().match(/^(\d+)(\+?)$/);
-    if (!match) return;
-    var target = parseInt(match[1], 10);
-    var suffix = match[2];
-    var settle = function () {
-      el.textContent = target + suffix;
-    };
-
-    if (reduceMotion || document.hidden) {
-      settle();
-      return;
-    }
-
-    var duration = 900;
-    var start = null;
-    function step(ts) {
-      if (!start) start = ts;
-      var progress = Math.min((ts - start) / duration, 1);
-      el.textContent = Math.floor(progress * target) + suffix;
-      if (progress < 1) requestAnimationFrame(step);
-      else settle();
-    }
-    requestAnimationFrame(step);
-    // Belt and braces: if the frame loop never delivers, show the real number.
-    setTimeout(settle, duration + 400);
-  });
+  // Reveal-on-scroll
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
 })();
