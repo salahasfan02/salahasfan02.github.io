@@ -41,10 +41,10 @@
     });
     el.innerHTML = html;
   }
-  buildWords("lede", "I build local-first AI that never phones home.", 55, ["local-first", "AI"]);
+  buildWords("lede", "I build secure, full-stack software: from database systems to on-device AI.", 45, ["full-stack", "AI"]);
 
   // Skills marquee
-  var marqueeItems = ["Artificial Intelligence", "Automation Engineering", "Cloud Infrastructure", "Business Intelligence", "Cybersecurity", "Digital Transformation", "Full-Stack Development", "Machine Learning"];
+  var marqueeItems = ["Full-Stack Development", "Artificial Intelligence", "Database Engineering", "Automation Engineering", "Cloud Infrastructure", "Business Intelligence", "Cybersecurity", "Digital Transformation"];
   var m = document.getElementById("marquee");
   if (m) {
     var row = marqueeItems.map(function (t) { return "<span>" + t + "</span>"; }).join("");
