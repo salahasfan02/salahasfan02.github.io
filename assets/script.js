@@ -44,7 +44,7 @@
   buildWords("lede", "I build local-first AI that never phones home.", 55, ["local-first", "AI"]);
 
   // Skills marquee
-  var marqueeItems = ["Next.js", "TypeScript", "Python", "Ollama", "Azure", "Power BI", ".NET", "React"];
+  var marqueeItems = ["Artificial Intelligence", "Automation Engineering", "Cloud Infrastructure", "Business Intelligence", "Cybersecurity", "Digital Transformation", "Full-Stack Development", "Machine Learning"];
   var m = document.getElementById("marquee");
   if (m) {
     var row = marqueeItems.map(function (t) { return "<span>" + t + "</span>"; }).join("");
